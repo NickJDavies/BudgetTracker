@@ -14,6 +14,21 @@ fetch("/api/transaction")
     populateChart();
   });
 
+if (localStorage.getItem("offlineTransactions") != null) {
+  fetch("/api/transaction/bulk", {
+    method: "POST",
+    body: localStorage.getItem("offlineTransactions"),
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      "Content-Type": "application/json"
+    }
+  })
+  .then(response => {
+    localStorage.removeItem("offlineTransaction")
+    return response.json();
+  })
+}
+  
 function populateTotal() {
   // reduce transaction amounts to a single total value
   let total = transactions.reduce((total, t) => {
@@ -78,6 +93,18 @@ function populateChart() {
   });
 }
 
+function saveRecord(transaction) {
+  let offlineTransactions = JSON.parse(localStorage.getItem("offlineTransactions"));
+
+  if (offlineTransactions === null) {
+    localStorage.setItem("offlineTransactions", JSON.stringify([transaction]));
+  }
+  else {
+    offlineTransactions.push(transaction);
+    localStorage.setItem("offlineTransactions", JSON.stringify(offlineTransactions));
+  }
+}
+
 function sendTransaction(isAdding) {
   let nameEl = document.querySelector("#t-name");
   let amountEl = document.querySelector("#t-amount");
@@ -111,7 +138,7 @@ function sendTransaction(isAdding) {
   populateChart();
   populateTable();
   populateTotal();
-  
+
   // also send to server
   fetch("/api/transaction", {
     method: "POST",

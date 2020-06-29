@@ -6,28 +6,38 @@ fetch("/api/transaction")
     return response.json();
   })
   .then(data => {
-    // save db data on global variable
-    transactions = data;
+    if (localStorage.getItem("offlineTransactions") != null) {
+      fetch("/api/transaction/bulk", {
+        method: "POST",
+        body: localStorage.getItem("offlineTransactions"),
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json"
+        }
+      })
+      .then(response => {
+        localStorage.removeItem("offlineTransactions")
+        return response.json();
+      })
+      .catch(err => {
+        data = JSON.parse(localStorage.getItem("offlineTransactions")).concat(data)
+        transactions = data;
+    
+        populateTotal();
+        populateTable();
+        populateChart();
+      });
+    } else {
+      // save db data on global variable
+      transactions = data;
 
-    populateTotal();
-    populateTable();
-    populateChart();
+      populateTotal();
+      populateTable();
+      populateChart();
+    }
   });
 
-if (localStorage.getItem("offlineTransactions") != null) {
-  fetch("/api/transaction/bulk", {
-    method: "POST",
-    body: localStorage.getItem("offlineTransactions"),
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      "Content-Type": "application/json"
-    }
-  })
-  .then(response => {
-    localStorage.removeItem("offlineTransactions")
-    return response.json();
-  })
-}
+
   
 function populateTotal() {
   // reduce transaction amounts to a single total value
@@ -100,7 +110,7 @@ function saveRecord(transaction) {
     localStorage.setItem("offlineTransactions", JSON.stringify([transaction]));
   }
   else {
-    offlineTransactions.push(transaction);
+    offlineTransactions.unshift(transaction);
     localStorage.setItem("offlineTransactions", JSON.stringify(offlineTransactions));
   }
 }

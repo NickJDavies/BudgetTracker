@@ -24,7 +24,8 @@ if (localStorage.getItem("offlineTransactions") != null) {
     }
   })
   .then(response => {
-    localStorage.removeItem("offlineTransaction")
+    console.log("HERE!!!")
+    localStorage.removeItem("offlineTransactions")
     return response.json();
   })
 }
